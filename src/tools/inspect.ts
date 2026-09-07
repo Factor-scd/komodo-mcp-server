@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { KomodoClient } from "../komodo-client.js";
-import { INSPECT_REQUEST_MAP } from "../types.js";
+import { INSPECT_REQUEST_MAP, INSPECT_PARAM_KEY } from "../types.js";
 
 const InspectType = z.enum([
   "container", "image", "network", "volume",
@@ -33,8 +33,16 @@ export async function handleInspect(
     throw new Error(`Unknown inspect type: ${inspect_type}`);
   }
 
-  const params: Record<string, unknown> = { id };
-  if (server) params.server = server;
+  const params: Record<string, unknown> = {};
+  const paramKey = server ? INSPECT_PARAM_KEY[inspect_type] : undefined;
+  if (paramKey) {
+    // Server-scoped Docker objects: {server, <container|image|network|volume>}
+    params.server = server;
+    params[paramKey] = id;
+  } else {
+    params.id = id;
+    if (server) params.server = server;
+  }
 
   const result = await client.rpc("read", requestName, params);
 

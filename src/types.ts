@@ -449,7 +449,18 @@ export const SUMMARY_REQUEST_MAP: Partial<Record<ResourceType, string>> = {
   action: "GetActionsSummary",
 };
 
-// Maps inspect type to the inspect RPC request name
+// Maps inspect type to the inspect RPC request name.
+// Server-scoped Docker objects also need an object param key (see
+// INSPECT_PARAM_KEY below): Core v2.3.3 shapes are {server, container},
+// {server, image}, {server, network}, {server, volume} — sending
+// {id, server} fails with "duplicate field `server`".
+export const INSPECT_PARAM_KEY: Record<string, string> = {
+  container: "container",
+  image: "image",
+  network: "network",
+  volume: "volume",
+};
+
 export const INSPECT_REQUEST_MAP: Record<string, string> = {
   container: "InspectContainer",
   image: "InspectImage",

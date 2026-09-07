@@ -47,9 +47,13 @@ export class KomodoClient {
     const res = await fetch(`${this.baseUrl}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      // Komodo Core v2.3.3 login shape (verified live): {type, params}
       body: JSON.stringify({
-        username: this.username,
-        password: this.password,
+        type: "LoginLocalUser",
+        params: {
+          username: this.username,
+          password: this.password,
+        },
       }),
       signal: AbortSignal.timeout(30000),
     });
@@ -57,7 +61,13 @@ export class KomodoClient {
       const text = await res.text().catch(() => "");
       throw new Error(`Komodo login failed (${res.status}): ${text}`);
     }
-    this.token = await res.text();
+    // Response shape: {type, data: {jwt}} — NOT raw text
+    const body = (await res.json()) as { data?: { jwt?: string } };
+    const jwt = body?.data?.jwt;
+    if (!jwt) {
+      throw new Error(`Komodo login succeeded but no data.jwt in response`);
+    }
+    this.token = jwt;
   }
 
   async rpc(
