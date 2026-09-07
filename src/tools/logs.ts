@@ -1,10 +1,12 @@
 import { z } from "zod";
 import { KomodoClient } from "../komodo-client.js";
 
+const LogResourceType = z.enum(["deployment", "stack", "container", "swarm_service"]);
+
 export const logsInputSchema = {
-  resource_type: z
-    .enum(["deployment", "stack"])
-    .describe("Resource type to get logs for"),
+  resource_type: LogResourceType.describe(
+    "Resource type to get logs for (deployment, stack, container, swarm_service)"
+  ),
   id: z.string().describe("Resource ID or name"),
   tail: z
     .number()
@@ -14,7 +16,7 @@ export const logsInputSchema = {
 
 export async function handleLogs(
   args: {
-    resource_type: "deployment" | "stack";
+    resource_type: z.infer<typeof LogResourceType>;
     id: string;
     tail?: number;
   },
@@ -27,11 +29,19 @@ export async function handleLogs(
 
   let result: unknown;
 
-  if (resource_type === "deployment") {
-    result = await client.rpc("read", "GetDeploymentLogs", params);
-  } else {
-    // stack — GetStack returns full stack state including logs
-    result = await client.rpc("read", "GetStack", { id });
+  switch (resource_type) {
+    case "deployment":
+      result = await client.rpc("read", "GetDeploymentLog", params);
+      break;
+    case "stack":
+      result = await client.rpc("read", "GetStackLog", params);
+      break;
+    case "container":
+      result = await client.rpc("read", "GetContainerLog", params);
+      break;
+    case "swarm_service":
+      result = await client.rpc("read", "GetSwarmServiceLog", params);
+      break;
   }
 
   return {
