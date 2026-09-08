@@ -10,6 +10,16 @@ const listDetailType = z.enum([
   "full_stacks", "full_builds", "full_servers", "full_deployments",
   "full_procedures", "full_repos", "full_builders", "full_swarms",
   "full_actions", "full_alerters", "full_resource_syncs",
+  // Swarm detail lists
+  "swarm_configs", "swarm_networks", "swarm_nodes", "swarm_secrets",
+  "swarm_services", "swarm_stacks", "swarm_tasks",
+  // Config lists
+  "git_providers_from_config", "image_registries_from_config",
+  // Extra args
+  "common_build_extra_args", "common_deployment_extra_args",
+  "common_stack_build_extra_args", "common_stack_extra_args",
+  // Other
+  "image_history", "all_stack_services",
 ]);
 
 export const listDetailInputSchema = {

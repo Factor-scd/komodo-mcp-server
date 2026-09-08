@@ -254,13 +254,6 @@ RESOURCE_DEFS: dict[str, dict] = {
         "name_field": "name",
         "has_update": True,
     },
-    "terminal": {
-        "create_params": lambda name: {"name": name},
-        "update_params": None,  # No update endpoint
-        "id_field": "id",
-        "name_field": "name",
-        "has_update": False,
-    },
 }
 
 # Test tiers
@@ -268,7 +261,6 @@ TIERS: list[list[str]] = [
     ["tag", "variable", "user_group"],
     ["procedure", "action", "repo", "builder", "alerter", "sync_resource"],
     ["server", "stack", "build", "deployment", "swarm"],
-    ["terminal"],
 ]
 
 

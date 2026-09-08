@@ -1,12 +1,12 @@
-# Komodo API — Endpoint-to-Tool Mapping (v2.0)
+# Komodo API — Endpoint-to-Tool Mapping (v2.1)
 
-Full reference of Komodo RPC endpoints and which MCP tool handles them.
+Full reference of Komodo RPC endpoints (OpenAPI v2.3.3) and which MCP tool handles them.
 
 ## Auth
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `POST /auth/login` | — | JWT login (handled internally by komodo-client.ts) |
+| `POST /auth/login/LoginLocalUser` | — | JWT login (handled internally by komodo-client.ts) |
 | API Key headers | — | `X-Api-Key` + `X-Api-Secret` (preferred, set via env vars) |
 
 ---
@@ -24,47 +24,16 @@ Full reference of Komodo RPC endpoints and which MCP tool handles them.
 | `read/ListDeployments` | deployment |
 | `read/ListAlerters` | alerter |
 | `read/ListImageRegistryAccounts` | image_registry_account |
-| `read/ListSyncResources` | sync_resource |
+| `read/ListResourceSyncs` | sync_resource |
 | `read/ListUsers` | user |
 | `read/ListTags` | tag |
-| `read/ListExecutions` | execution |
-| `read/ListAccessRequests` | access_request |
 | `read/ListActions` | action |
 | `read/ListRepos` | repo |
 | `read/ListBuilders` | builder |
 | `read/ListSwarms` | swarm |
 | `read/ListVariables` | variable |
 | `read/ListUserGroups` | user_group |
-| `read/ListAlerts` | alert |
-| `read/ListTerminals` | terminal |
 | `read/ListGitProviderAccounts` | git_provider_account |
-
-### Search Endpoints (via `search` param)
-
-| Komodo RPC | Resource Type |
-|------------|---------------|
-| `read/SearchStacks` | stack |
-| `read/SearchBuilds` | build |
-| `read/SearchServers` | server |
-| `read/SearchProcedures` | procedure |
-| `read/SearchDeployments` | deployment |
-| `read/SearchAlerters` | alerter |
-| `read/SearchImageRegistryAccounts` | image_registry_account |
-| `read/SearchSyncResources` | sync_resource |
-
-### Other Read → `komodo_list`
-
-| Komodo RPC | Notes |
-|------------|-------|
-| `read/ListStackServices` | List stack services |
-| `read/GetStackServices` | List stack services |
-| `read/GetGlobalStats` | Global statistics |
-| `read/GetResourceStats` | Resource statistics |
-| `read/ListTagMappings` | Tag mappings |
-| `read/ListBinding` | Bindings |
-| `read/ListResources` | All resources |
-| `read/ListResourceSyncContents` | Sync contents |
-| `read/ListServerStats` | Server statistics |
 
 ---
 
@@ -79,24 +48,15 @@ Full reference of Komodo RPC endpoints and which MCP tool handles them.
 | `read/GetDeployment` | deployment |
 | `read/GetAlerter` | alerter |
 | `read/GetImageRegistryAccount` | image_registry_account |
-| `read/GetSyncResource` | sync_resource |
-| `read/GetUser` | user |
+| `read/GetResourceSync` | sync_resource |
 | `read/GetTag` | tag |
-| `read/GetAccessRequest` | access_request |
 | `read/GetAction` | action |
 | `read/GetRepo` | repo |
 | `read/GetBuilder` | builder |
 | `read/GetSwarm` | swarm |
 | `read/GetVariable` | variable |
 | `read/GetUserGroup` | user_group |
-| `read/GetAlert` | alert |
 | `read/GetGitProviderAccount` | git_provider_account |
-| `read/GetBuildAggregatedStatus` | Build aggregated status |
-| `read/GetConcurrencyLimitUsage` | Concurrency limits |
-| `read/GetResourceSyncDifferences` | Sync differences |
-| `read/GetResource` | Single resource |
-| `read/GetBinding` | Single binding |
-| `read/GetLicenseInfo` | License info |
 
 ---
 
@@ -119,9 +79,7 @@ Full reference of Komodo RPC endpoints and which MCP tool handles them.
 | `write/CreateSwarm` | swarm |
 | `write/CreateVariable` | variable |
 | `write/CreateUserGroup` | user_group |
-| `write/CreateTerminal` | terminal |
 | `write/CreateGitProviderAccount` | git_provider_account |
-| `write/CreateTagMapping` | Tag mapping |
 
 ---
 
@@ -137,7 +95,6 @@ Full reference of Komodo RPC endpoints and which MCP tool handles them.
 | `write/UpdateAlerter` | alerter |
 | `write/UpdateImageRegistryAccount` | image_registry_account |
 | `write/UpdateResourceSync` | sync_resource |
-| `write/UpdateUser` | user |
 | `write/UpdateTagColor` | tag |
 | `write/UpdateAction` | action |
 | `write/UpdateRepo` | repo |
@@ -146,50 +103,6 @@ Full reference of Komodo RPC endpoints and which MCP tool handles them.
 | `write/UpdateVariableValue` | variable |
 | `write/UpdateUserGroup` | user_group |
 | `write/UpdateGitProviderAccount` | git_provider_account |
-
-### Other Write → `komodo_update`
-
-| Komodo RPC | Notes |
-|------------|-------|
-| `write/UpdateStackServiceNames` | Stack service names |
-| `write/UpdateServerTemplate` | Server template |
-| `write/UpdateServerTemplateInstances` | Server template instances |
-| `write/BindStack` | Bind stack |
-| `write/BindServer` | Bind server |
-| `write/UpdateBinding` | Update binding |
-| `write/UpdateAllBindings` | Update all bindings |
-| `write/MarkResourceSyncDeployed` | Mark sync deployed |
-| `write/UpdateUserPermissions` | User permissions |
-| `write/UpdateConcurrencyLimit` | Concurrency limits |
-| `write/AcknowledgeAccessRequest` | Access request |
-| `write/UpdateTagMapping` | Tag mapping |
-| `write/UpdateProcedureSchedule` | Procedure schedule |
-| `write/UpdateUserAdmin` | User admin status |
-| `write/UpdateUserBasePermissions` | User base permissions |
-| `write/UpdateServiceUserDescription` | Service user desc |
-| `write/UpdateOnboardingKey` | Onboarding key |
-| `write/UpdatePermissionOnResourceType` | Permission on type |
-| `write/UpdatePermissionOnTarget` | Permission on target |
-| `write/UpdateResourceMeta` | Resource metadata |
-| `write/RefreshStackCache` | Refresh stack cache |
-| `write/RefreshBuildCache` | Refresh build cache |
-| `write/RefreshRepoCache` | Refresh repo cache |
-| `write/RefreshResourceSyncPending` | Refresh sync pending |
-| `write/CommitSync` | Commit sync |
-| `write/RotateServerKeys` | Rotate server keys |
-| `write/WriteBuildFileContents` | Write build file |
-| `write/WriteStackFileContents` | Write stack file |
-| `write/WriteSyncFileContents` | Write sync file |
-| `write/CheckDeploymentForUpdate` | Check deployment update |
-| `write/CheckStackForUpdate` | Check stack update |
-| `write/SetEveryoneUserGroup` | Set everyone group |
-| `write/SetUsersInUserGroup` | Set users in group |
-| `write/SetLastSeenUpdate` | Set last seen |
-| `write/PushRecentlyViewed` | Push recently viewed |
-| `write/UpdateVariableDescription` | Variable description |
-| `write/UpdateVariableIsSecret` | Variable secret flag |
-| `write/UpdateTagColor` | Tag color |
-| `write/UpdateServerPublicKey` | Server public key |
 
 ---
 
@@ -203,7 +116,7 @@ Full reference of Komodo RPC endpoints and which MCP tool handles them.
 | `write/DeleteProcedure` | procedure |
 | `write/DeleteDeployment` | deployment |
 | `write/DeleteAlerter` | alerter |
-| `write/DeleteSyncResource` | sync_resource |
+| `write/DeleteResourceSync` | sync_resource |
 | `write/DeleteTag` | tag |
 | `write/DeleteAction` | action |
 | `write/DeleteRepo` | repo |
@@ -211,19 +124,7 @@ Full reference of Komodo RPC endpoints and which MCP tool handles them.
 | `write/DeleteSwarm` | swarm |
 | `write/DeleteVariable` | variable |
 | `write/DeleteUserGroup` | user_group |
-| `write/DeleteTerminal` | terminal |
 | `write/DeleteGitProviderAccount` | git_provider_account |
-
-### Other Delete → `komodo_delete`
-
-| Komodo RPC | Notes |
-|------------|-------|
-| `write/DeleteAllTerminals` | Delete all terminals |
-| `write/DeleteApiKeyForServiceUser` | Delete API key |
-| `write/DeleteImageRegistryAccount` | Delete registry account |
-| `write/DeleteOnboardingKey` | Delete onboarding key |
-| `write/DeleteUser` | Delete user |
-| `write/DeleteTagMapping` | Delete tag mapping |
 
 ---
 
@@ -234,19 +135,14 @@ Full reference of Komodo RPC endpoints and which MCP tool handles them.
 |-----------|------------|
 | `run_build` | `execute/RunBuild` |
 | `deploy_stack` | `execute/DeployStack` |
-| `deploy_stack_service` | `execute/DeployStackService` |
+| `deploy_stack_service` | `execute/RunStackService` |
 | `deploy` | `execute/Deploy` |
 | `deploy_stack_if_changed` | `execute/DeployStackIfChanged` |
 | `destroy_stack` | `execute/DestroyStack` |
 | `destroy_container` | `execute/DestroyContainer` |
 | `destroy_deployment` | `execute/DestroyDeployment` |
-| `run_deployment_execute` | `execute/Deploy` |
-| `run_deployment_redeploy` | `execute/Deploy` |
-| `run_deployment_destroy` | `execute/DestroyDeployment` |
-| `run_deployment_stop` | `execute/StopDeployment` |
-| `run_deployment_logs` | `execute/RunDeploymentLogs` |
-| `run_deployment_action` | `execute/RunDeploymentAction` |
-| `run_deployment_sync` | `execute/RunDeploymentSync` |
+| `pull_stack` | `execute/PullStack` |
+| `pull_deployment` | `execute/PullDeployment` |
 
 ### Repo Operations
 | Operation | Komodo RPC |
@@ -254,7 +150,6 @@ Full reference of Komodo RPC endpoints and which MCP tool handles them.
 | `build_repo` | `execute/BuildRepo` |
 | `clone_repo` | `execute/CloneRepo` |
 | `pull_repo` | `execute/PullRepo` |
-| `pull_deployment` | `execute/PullDeployment` |
 | `cancel_repo_build` | `execute/CancelRepoBuild` |
 | `clear_repo_cache` | `execute/ClearRepoCache` |
 
@@ -262,34 +157,20 @@ Full reference of Komodo RPC endpoints and which MCP tool handles them.
 | Operation | Komodo RPC |
 |-----------|------------|
 | `run_procedure` | `execute/RunProcedure` |
-| `run_procedure_stage` | `execute/RunProcedureStage` |
 | `run_action` | `execute/RunAction` |
+| `run_sync` | `execute/RunSync` |
 | `cancel_action` | `execute/CancelAction` |
 | `cancel_build` | `execute/CancelBuild` |
 | `cancel_procedure` | `execute/CancelProcedure` |
 
-### Stack Operations
+### Stack Lifecycle
 | Operation | Komodo RPC |
 |-----------|------------|
-| `run_stack_refresh_cache` | `execute/RunStackRefreshCache` |
-| `run_stack_refresh_content` | `execute/RunStackRefreshContent` |
-| `run_stack_pull` | `execute/RunStackPull` |
-| `run_stack_pull_deployment` | `execute/RunStackPullDeployment` |
-| `run_stack_stop` | `execute/StopStack` |
-| `run_stack_restart` | `execute/RestartStack` |
-| `run_stack_pause` | `execute/PauseStack` |
-| `run_stack_unpause` | `execute/UnpauseStack` |
-| `run_stack_remove_orphan_containers` | `execute/RunStackRemoveOrphanContainers` |
-| `run_stack_toggle_service_dependencies` | `execute/RunStackToggleServiceDependencies` |
-| `run_stack_auto_update` | `execute/RunStackAutoUpdate` |
-| `run_stack_commit` | `execute/RunStackCommit` |
 | `start_stack` | `execute/StartStack` |
 | `stop_stack` | `execute/StopStack` |
 | `restart_stack` | `execute/RestartStack` |
 | `pause_stack` | `execute/PauseStack` |
 | `unpause_stack` | `execute/UnpauseStack` |
-| `run_resource_sync` | `execute/RunResourceSync` |
-| `run_sync_deployment` | `execute/RunSyncDeployment` |
 
 ### Container Lifecycle
 | Operation | Komodo RPC |
@@ -317,13 +198,10 @@ Full reference of Komodo RPC endpoints and which MCP tool handles them.
 ### Server Operations
 | Operation | Komodo RPC |
 |-----------|------------|
-| `run_server_refresh` | `execute/RunServerRefresh` |
 | `run_server_refresh_containers` | `execute/RunServerRefreshContainers` |
-| `run_server_update_periphery` | `execute/RunServerUpdatePeriphery` |
 | `run_server_prune_images` | `execute/PruneImages` |
 | `run_server_prune_containers` | `execute/PruneContainers` |
 | `run_server_prune_networks` | `execute/PruneNetworks` |
-| `run_server_stats` | `execute/RunServerStats` |
 | `run_server_run_command` | `execute/RunServerRunCommand` |
 | `run_server_scripts` | `execute/RunServerScripts` |
 | `run_server_copy` | `execute/RunServerCopy` |
@@ -374,16 +252,11 @@ Full reference of Komodo RPC endpoints and which MCP tool handles them.
 ### Admin & Misc
 | Operation | Komodo RPC |
 |-----------|------------|
-| `run_server_refresh` | `execute/RunServerRefresh` |
-| `run_server_refresh_containers` | `execute/RunServerRefreshContainers` |
-| `run_server_update_periphery` | `execute/RunServerUpdatePeriphery` |
-| `global_auto_update` | `execute/GlobalAutoUpdate` |
 | `backup_core_database` | `execute/BackupCoreDatabase` |
 | `rotate_core_keys` | `execute/RotateCoreKeys` |
+| `global_auto_update` | `execute/GlobalAutoUpdate` |
 | `send_alert` | `execute/SendAlert` |
 | `test_alerter` | `execute/TestAlerter` |
-| `sleep` | `execute/Sleep` |
-| `get_mcp_token` | `execute/GetMcpToken` |
 
 ---
 
@@ -481,3 +354,120 @@ Full reference of Komodo RPC endpoints and which MCP tool handles them.
 | full_actions | `read/ListFullActions` |
 | full_alerters | `read/ListFullAlerters` |
 | full_resource_syncs | `read/ListFullResourceSyncs` |
+| swarm_configs | `read/ListSwarmConfigs` |
+| swarm_networks | `read/ListSwarmNetworks` |
+| swarm_nodes | `read/ListSwarmNodes` |
+| swarm_secrets | `read/ListSwarmSecrets` |
+| swarm_services | `read/ListSwarmServices` |
+| swarm_stacks | `read/ListSwarmStacks` |
+| swarm_tasks | `read/ListSwarmTasks` |
+| git_providers_from_config | `read/ListGitProvidersFromConfig` |
+| image_registries_from_config | `read/ListImageRegistriesFromConfig` |
+| common_build_extra_args | `read/ListCommonBuildExtraArgs` |
+| common_deployment_extra_args | `read/ListCommonDeploymentExtraArgs` |
+| common_stack_build_extra_args | `read/ListCommonStackBuildExtraArgs` |
+| common_stack_extra_args | `read/ListCommonStackExtraArgs` |
+| image_history | `read/ListImageHistory` |
+| all_stack_services | `read/ListAllStackServices` |
+
+---
+
+## `komodo_copy` — Copy Resources
+
+| Resource Type | Komodo RPC |
+|---------------|------------|
+| stack | `write/CopyStack` |
+| build | `write/CopyBuild` |
+| server | `write/CopyServer` |
+| deployment | `write/CopyDeployment` |
+| procedure | `write/CopyProcedure` |
+| alerter | `write/CopyAlerter` |
+| action | `write/CopyAction` |
+| repo | `write/CopyRepo` |
+| builder | `write/CopyBuilder` |
+| swarm | `write/CopySwarm` |
+| sync_resource | `write/CopyResourceSync` |
+
+---
+
+## `komodo_rename` — Rename Resources
+
+| Resource Type | Komodo RPC |
+|---------------|------------|
+| stack | `write/RenameStack` |
+| build | `write/RenameBuild` |
+| server | `write/RenameServer` |
+| deployment | `write/RenameDeployment` |
+| procedure | `write/RenameProcedure` |
+| alerter | `write/RenameAlerter` |
+| action | `write/RenameAction` |
+| repo | `write/RenameRepo` |
+| builder | `write/RenameBuilder` |
+| swarm | `write/RenameSwarm` |
+| tag | `write/RenameTag` |
+| user_group | `write/RenameUserGroup` |
+
+---
+
+## Other Notable Endpoints (not exposed as MCP tools)
+
+These exist in the API but are not currently mapped to MCP tools. They can be added if needed.
+
+### Auth (31 endpoints)
+GitHub/Google/OIDC OAuth, passkey/TOTP 2FA, API key management, account management.
+
+### Read — Additional
+| Komodo RPC | Description |
+|------------|-------------|
+| `read/GetCoreInfo` | Core API configuration info |
+| `read/GetVersion` | Core API version |
+| `read/GetSystemInformation` | Server system information |
+| `read/GetSystemStats` | Server system stats |
+| `read/GetDeploymentStats` | Deployment container stats |
+| `read/GetDeploymentContainer` | Deployment container info |
+| `read/GetHistoricalServerStats` | Timeseries server stats |
+| `read/GetBuildMonthlyStats` | Monthly build stats |
+| `read/GetPermission` | User permission level on resource |
+| `read/GetUsername` | Get username by ID |
+| `read/GetResourceMatchingContainer` | Find resource for container |
+| `read/GetUpdate` | Get update data |
+| `read/FindUser` | Find user (admin) |
+| `read/Get*ActionState` (9) | Action state for each resource type |
+| `read/ExportAllResourcesToToml` | Export all resources to TOML |
+| `read/ExportResourcesToToml` | Export specific resources to TOML |
+
+### Write — Additional
+| Komodo RPC | Description |
+|------------|-------------|
+| `write/CreateLocalUser` | Create local user (admin) |
+| `write/CreateServiceUser` | Create service user (admin) |
+| `write/CreateNetwork` | Create docker network |
+| `write/CreateDeploymentFromContainer` | Create deployment from container |
+| `write/CreateApiKeyForServiceUser` | Create API key for service user |
+| `write/AddUserToUserGroup` | Add user to group (admin) |
+| `write/RemoveUserFromUserGroup` | Remove user from group (admin) |
+| `write/CloseAlert` | Close alert (admin) |
+| `write/BatchDeleteAllTerminals` | Batch delete terminals |
+| `write/RefreshStackCache` | Refresh stack cache |
+| `write/RefreshBuildCache` | Refresh build cache |
+| `write/RefreshRepoCache` | Refresh repo cache |
+| `write/RefreshResourceSyncPending` | Refresh sync pending |
+| `write/CommitSync` | Commit sync |
+| `write/CheckDeploymentForUpdate` | Check deployment update |
+| `write/CheckStackForUpdate` | Check stack update |
+| `write/WriteBuildFileContents` | Write build file contents |
+| `write/WriteStackFileContents` | Write stack file contents |
+| `write/WriteSyncFileContents` | Write sync file contents |
+| `write/RotateServerKeys` | Rotate server keys |
+| `write/UpdatePermissionOnResourceType` | Update permission on type |
+| `write/UpdatePermissionOnTarget` | Update permission on target |
+| `write/UpdateResourceMeta` | Update resource metadata |
+| `write/UpdateServerPublicKey` | Update server public key |
+| `write/UpdateUserAdmin` | Update user admin status |
+| `write/UpdateUserBasePermissions` | Update user base permissions |
+| `write/UpdateVariableDescription` | Update variable description |
+| `write/UpdateVariableIsSecret` | Update variable secret flag |
+| `write/SetEveryoneUserGroup` | Set everyone group |
+| `write/SetUsersInUserGroup` | Set users in group |
+| `write/SetLastSeenUpdate` | Set last seen update |
+| `write/PushRecentlyViewed` | Push recently viewed |

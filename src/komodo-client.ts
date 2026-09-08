@@ -12,8 +12,8 @@ export class KomodoClient {
   constructor() {
     this.baseUrl =
       process.env.KOMODO_BASE_URL || process.env.KOMODO_URL || "http://10.10.2.114:9120";
-    this.username = process.env.KOMODO_USERNAME || "";
-    this.password = process.env.KOMODO_PASSWORD || "";
+    this.username = process.env.KOMODO_USERNAME || process.env.KOMODO_INIT_ADMIN_USERNAME || "";
+    this.password = process.env.KOMODO_PASSWORD || process.env.KOMODO_INIT_ADMIN_PASSWORD || "";
     this.apiKey = process.env.KOMODO_API_KEY || null;
     this.apiSecret = process.env.KOMODO_API_SECRET || null;
     this.useApiKey = !!(this.apiKey && this.apiSecret);

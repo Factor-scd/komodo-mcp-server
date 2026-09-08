@@ -8,12 +8,12 @@ import {
 
 export const listInputSchema = {
   resource_type: ResourceType.describe(
-    "Resource type to list (stack, build, server, procedure, deployment, alerter, image_registry_account, sync_resource, user, tag, execution, access_request)",
+    "Resource type to list (stack, build, server, procedure, deployment, alerter, image_registry_account, sync_resource, user, tag, action, repo, builder, swarm, variable, user_group, git_provider_account)",
   ),
   search: z
     .string()
     .optional()
-    .describe("Optional search/filter query — uses the Search* endpoint instead of List*"),
+    .describe("Optional search/filter query — filters results server-side"),
   project: z
     .string()
     .optional()

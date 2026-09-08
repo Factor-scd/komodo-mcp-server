@@ -14,6 +14,8 @@ import { summaryInputSchema, handleSummary } from "./tools/summary.js";
 import { inspectInputSchema, handleInspect } from "./tools/inspect.js";
 import { searchLogsInputSchema, handleSearchLogs } from "./tools/search-logs.js";
 import { listDetailInputSchema, handleListDetail } from "./tools/list-detail.js";
+import { copyInputSchema, handleCopy } from "./tools/copy.js";
+import { renameInputSchema, handleRename } from "./tools/rename.js";
 
 const PORT = parseInt(process.env.PORT || "9800", 10);
 const client = new KomodoClient();
@@ -22,42 +24,42 @@ const transports: Record<string, StreamableHTTPServerTransport> = {};
 function createServerInstance(): McpServer {
   const server = new McpServer({
     name: "komodo-mcp-server",
-    version: "2.0.0",
+    version: "2.1.0",
   });
 
   server.registerTool("komodo_list", {
     description:
-      "List or search Komodo resources. resource_type: stack, build, server, procedure, deployment, alerter, image_registry_account, sync_resource, user, tag, execution, access_request, action, repo, builder, swarm, variable, user_group, alert, terminal, git_provider_account. Returns a JSON array.",
+      "List or search Komodo resources. resource_type: stack, build, server, procedure, deployment, alerter, image_registry_account, sync_resource, user, tag, action, repo, builder, swarm, variable, user_group, git_provider_account. Returns a JSON array.",
     inputSchema: listInputSchema,
   }, async (args) => handleList(args, client));
 
   server.registerTool("komodo_get", {
     description:
-      "Get a single Komodo resource by ID or name. resource_type: stack, build, server, procedure, deployment, alerter, image_registry_account, sync_resource, user, tag, execution, access_request, action, repo, builder, swarm, variable, user_group, alert, git_provider_account. Returns the full resource object.",
+      "Get a single Komodo resource by ID or name. resource_type: stack, build, server, procedure, deployment, alerter, image_registry_account, sync_resource, tag, action, repo, builder, swarm, variable, user_group, git_provider_account. Returns the full resource object.",
     inputSchema: getInputSchema,
   }, async (args) => handleGet(args, client));
 
   server.registerTool("komodo_create", {
     description:
-      "Create a new Komodo resource. resource_type: stack, build, server, procedure, deployment, alerter, image_registry_account, sync_resource, tag, action, repo, builder, swarm, variable, user_group, terminal, git_provider_account. Provide params object with Create* endpoint fields.",
+      "Create a new Komodo resource. resource_type: stack, build, server, procedure, deployment, alerter, image_registry_account, sync_resource, tag, action, repo, builder, swarm, variable, user_group, git_provider_account. Provide params object with Create* endpoint fields.",
     inputSchema: createInputSchema,
   }, async (args) => handleCreate(args, client));
 
   server.registerTool("komodo_update", {
     description:
-      "Update an existing Komodo resource by ID. resource_type: stack, build, server, procedure, deployment, alerter, image_registry_account, sync_resource, user, tag, action, repo, builder, swarm, variable, user_group, git_provider_account. Provide params with fields to update.",
+      "Update an existing Komodo resource by ID. resource_type: stack, build, server, procedure, deployment, alerter, image_registry_account, sync_resource, tag, action, repo, builder, swarm, variable, user_group, git_provider_account. Provide params with fields to update.",
     inputSchema: updateInputSchema,
   }, async (args) => handleUpdate(args, client));
 
   server.registerTool("komodo_delete", {
     description:
-      "Delete a Komodo resource by ID or name. resource_type: stack, build, server, procedure, deployment, alerter, sync_resource, tag, action, repo, builder, swarm, variable, user_group, terminal, git_provider_account.",
+      "Delete a Komodo resource by ID or name. resource_type: stack, build, server, procedure, deployment, alerter, sync_resource, tag, action, repo, builder, swarm, variable, user_group, git_provider_account.",
     inputSchema: deleteInputSchema,
   }, async (args) => handleDelete(args, client));
 
   server.registerTool("komodo_execute", {
     description:
-      "Execute a Komodo operation. 100+ operations including: run_build, deploy_stack, deploy, destroy_stack, run_procedure, run_action, build_repo, clone_repo, pull_repo, container lifecycle (start/stop/restart/pause/unpause), deployment lifecycle, stack lifecycle, server operations (refresh, prune, run_command, scripts, copy, move), swarm operations, batch operations (batch_run_build, batch_deploy, etc.), and admin ops (backup_core_database, global_auto_update).",
+      "Execute a Komodo operation. Operations include: build/deploy (run_build, deploy, deploy_stack, destroy_stack, pull_stack), repo (build_repo, clone_repo, pull_repo), procedure/action (run_procedure, run_action, run_sync), stack lifecycle (start/stop/restart/pause/unpause), container lifecycle, deployment lifecycle, server ops (refresh_containers, prune_images/containers/networks, run_command, scripts, copy, move), swarm ops (remove nodes/services/configs/secrets/stacks, create/rotate config/secret), batch ops, and admin (backup_core_database, rotate_core_keys, global_auto_update, send_alert, test_alerter).",
     inputSchema: executeInputSchema,
   }, async (args) => handleExecute(args, client));
 
@@ -69,7 +71,7 @@ function createServerInstance(): McpServer {
 
   server.registerTool("komodo_summary", {
     description:
-      "Get summary/stats for a Komodo resource type. resource_type: build (GetBuildsSummary), deployment (GetDeploymentsSummary), server (GetServersSummary), stack (GetStacksSummary), alerter (GetAlertersSummary), procedure (GetProceduresSummary), sync_resource (GetResourceSyncsSummary), repo (GetReposSummary), builder (GetBuildersSummary), swarm (GetSwarmsSummary), action (GetActionsSummary).",
+      "Get summary/stats for a Komodo resource type. resource_type: build, deployment, server, stack, alerter, procedure, sync_resource, repo, builder, swarm, action.",
     inputSchema: summaryInputSchema,
   }, async (args) => handleSummary(args, client));
 
@@ -87,9 +89,21 @@ function createServerInstance(): McpServer {
 
   server.registerTool("komodo_list_detail", {
     description:
-      "Extended listing for specific Docker/infrastructure objects. list_type: containers, all_containers, images, networks, volumes, system_processes, schedules, permissions, api_keys, secrets, updates, build_versions, compose_projects, user_target_permissions, full_stacks, full_builds, full_servers, full_deployments, full_procedures, full_repos, full_builders, full_swarms, full_actions, full_alerters, full_resource_syncs. Optional server filter.",
+      "Extended listing for Docker/infrastructure objects. list_type: containers, all_containers, images, networks, volumes, system_processes, schedules, permissions, api_keys, secrets, updates, build_versions, compose_projects, user_target_permissions, full_stacks, full_builds, full_servers, full_deployments, full_procedures, full_repos, full_builders, full_swarms, full_actions, full_alerters, full_resource_syncs, swarm_configs, swarm_networks, swarm_nodes, swarm_secrets, swarm_services, swarm_stacks, swarm_tasks, git_providers_from_config, image_registries_from_config, common_build_extra_args, common_deployment_extra_args, common_stack_build_extra_args, common_stack_extra_args, image_history, all_stack_services. Optional server filter.",
     inputSchema: listDetailInputSchema,
   }, async (args) => handleListDetail(args, client));
+
+  server.registerTool("komodo_copy", {
+    description:
+      "Copy a Komodo resource. resource_type: stack, build, server, deployment, procedure, alerter, action, repo, builder, swarm, sync_resource. Provide id of the source resource and optional name for the copy.",
+    inputSchema: copyInputSchema,
+  }, async (args) => handleCopy(args, client));
+
+  server.registerTool("komodo_rename", {
+    description:
+      "Rename a Komodo resource. resource_type: stack, build, server, deployment, procedure, alerter, action, repo, builder, swarm, tag, user_group. Provide id and the new name.",
+    inputSchema: renameInputSchema,
+  }, async (args) => handleRename(args, client));
 
   return server;
 }
@@ -128,7 +142,7 @@ const httpServer = createServer(async (req, res) => {
   // Health check
   if (req.method === "GET" && req.url === "/health") {
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ status: "ok", name: "komodo-mcp-server", version: "2.0.0" }));
+    res.end(JSON.stringify({ status: "ok", name: "komodo-mcp-server", version: "2.1.0" }));
     return;
   }
 

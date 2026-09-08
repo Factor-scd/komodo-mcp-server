@@ -12,7 +12,7 @@ const GET_PARAM_KEY: Record<string, string> = {
 
 export const getInputSchema = {
   resource_type: ResourceType.describe(
-    "Resource type to get (stack, build, server, procedure, deployment, alerter, image_registry_account, sync_resource, user, tag, execution, access_request)",
+    "Resource type to get (stack, build, server, procedure, deployment, alerter, image_registry_account, sync_resource, tag, action, repo, builder, swarm, variable, user_group, git_provider_account)",
   ),
   id: z.string().describe("Resource ID or name"),
 };

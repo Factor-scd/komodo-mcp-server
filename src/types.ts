@@ -11,74 +11,48 @@ export const ResourceType = z.enum([
   "sync_resource",
   "user",
   "tag",
-  "execution",
-  "access_request",
   "action",
   "repo",
   "builder",
   "swarm",
   "variable",
   "user_group",
-  "alert",
-  "terminal",
   "git_provider_account",
 ]);
 export type ResourceType = z.infer<typeof ResourceType>;
 
 export const ExecuteOperation = z.enum([
+  // Build & Deploy
   "run_build",
   "deploy_stack",
   "deploy_stack_service",
-  "run_procedure",
-  "run_procedure_stage",
-  "run_deployment_action",
-  "run_deployment_sync",
-  "run_resource_sync",
-  "run_stack_refresh_cache",
-  "run_stack_refresh_content",
-  "run_stack_pull",
-  "run_stack_pull_deployment",
-  "run_stack_stop",
-  "run_stack_restart",
-  "run_stack_pause",
-  "run_stack_unpause",
-  "run_stack_remove_orphan_containers",
-  "run_stack_toggle_service_dependencies",
-  "run_stack_auto_update",
-  "run_stack_commit",
-  "run_server_refresh",
-  "run_server_refresh_containers",
-  "run_server_update_periphery",
-  "run_server_prune_images",
-  "run_server_prune_containers",
-  "run_server_prune_networks",
-  "run_server_stats",
-  "run_server_run_command",
-  "run_server_scripts",
-  "run_server_copy",
-  "run_server_move",
-  "run_deployment_execute",
-  "run_deployment_redeploy",
-  "run_deployment_destroy",
-  "run_deployment_stop",
-  "run_deployment_logs",
-  "run_sync_deployment",
-  "get_mcp_token",
   "deploy",
   "deploy_stack_if_changed",
   "destroy_stack",
   "destroy_container",
   "destroy_deployment",
+  "pull_stack",
+  "pull_deployment",
+  // Repo operations
   "build_repo",
   "clone_repo",
   "pull_repo",
-  "pull_deployment",
   "cancel_repo_build",
   "clear_repo_cache",
+  // Procedure & Action
+  "run_procedure",
   "run_action",
+  "run_sync",
   "cancel_action",
   "cancel_build",
   "cancel_procedure",
+  // Stack lifecycle
+  "start_stack",
+  "stop_stack",
+  "restart_stack",
+  "pause_stack",
+  "unpause_stack",
+  // Container lifecycle
   "start_container",
   "stop_container",
   "restart_container",
@@ -89,12 +63,23 @@ export const ExecuteOperation = z.enum([
   "restart_all_containers",
   "pause_all_containers",
   "unpause_all_containers",
+  // Deployment lifecycle
   "start_deployment",
   "stop_deployment",
   "restart_deployment",
   "pause_deployment",
   "unpause_deployment",
-  "start_stack",
+  // Server operations
+  "run_server_refresh_containers",
+  "run_server_prune_images",
+  "run_server_prune_containers",
+  "run_server_prune_networks",
+  "run_server_run_command",
+  "run_server_scripts",
+  "run_server_copy",
+  "run_server_move",
+  "rotate_all_server_keys",
+  // Docker prune & cleanup
   "prune_buildx",
   "prune_docker_builders",
   "prune_system",
@@ -102,6 +87,7 @@ export const ExecuteOperation = z.enum([
   "delete_image",
   "delete_network",
   "delete_volume",
+  // Swarm operations
   "remove_swarm_nodes",
   "remove_swarm_services",
   "remove_swarm_configs",
@@ -112,6 +98,7 @@ export const ExecuteOperation = z.enum([
   "rotate_swarm_config",
   "rotate_swarm_secret",
   "update_swarm_node",
+  // Batch operations
   "batch_run_build",
   "batch_deploy_stack",
   "batch_deploy_stack_if_changed",
@@ -124,17 +111,16 @@ export const ExecuteOperation = z.enum([
   "batch_run_action",
   "batch_destroy_deployment",
   "batch_destroy_stack",
+  // Admin & misc
   "backup_core_database",
   "rotate_core_keys",
-  "rotate_all_server_keys",
   "global_auto_update",
   "send_alert",
   "test_alerter",
-  "sleep",
 ]);
 export type ExecuteOperation = z.infer<typeof ExecuteOperation>;
 
-// Maps resource_type to the list/search RPC request name
+// Maps resource_type to the list RPC request name
 export const LIST_REQUEST_MAP: Record<ResourceType, string> = {
   stack: "ListStacks",
   build: "ListBuilds",
@@ -143,49 +129,34 @@ export const LIST_REQUEST_MAP: Record<ResourceType, string> = {
   deployment: "ListDeployments",
   alerter: "ListAlerters",
   image_registry_account: "ListImageRegistryAccounts",
-  sync_resource: "ListSyncResources",
+  sync_resource: "ListResourceSyncs",
   user: "ListUsers",
   tag: "ListTags",
-  execution: "ListExecutions",
-  access_request: "ListAccessRequests",
   action: "ListActions",
   repo: "ListRepos",
   builder: "ListBuilders",
   swarm: "ListSwarms",
   variable: "ListVariables",
   user_group: "ListUserGroups",
-  alert: "ListAlerts",
-  terminal: "ListTerminals",
   git_provider_account: "ListGitProviderAccounts",
 };
 
 // Maps resource_type to the search RPC request name
-export const SEARCH_REQUEST_MAP: Record<ResourceType, string> = {
-  stack: "SearchStacks",
-  build: "SearchBuilds",
-  server: "SearchServers",
-  procedure: "SearchProcedures",
-  deployment: "SearchDeployments",
-  alerter: "SearchAlerters",
-  image_registry_account: "SearchImageRegistryAccounts",
-  sync_resource: "SearchSyncResources",
-  user: "ListUsers",
-  tag: "ListTags",
-  execution: "ListExecutions",
-  access_request: "ListAccessRequests",
-  action: "ListActions",
-  repo: "ListRepos",
-  builder: "ListBuilders",
-  swarm: "ListSwarms",
-  variable: "ListVariables",
-  user_group: "ListUserGroups",
-  alert: "ListAlerts",
-  terminal: "ListTerminals",
-  git_provider_account: "ListGitProviderAccounts",
+// Note: Search* endpoints exist for core resource types only.
+// Types not listed here fall back to their List* endpoint.
+export const SEARCH_REQUEST_MAP: Partial<Record<ResourceType, string>> = {
+  stack: "ListStacks",
+  build: "ListBuilds",
+  server: "ListServers",
+  procedure: "ListProcedures",
+  deployment: "ListDeployments",
+  alerter: "ListAlerters",
+  image_registry_account: "ListImageRegistryAccounts",
+  sync_resource: "ListResourceSyncs",
 };
 
 // Maps resource_type to the get RPC request name
-export const GET_REQUEST_MAP: Record<ResourceType, string> = {
+export const GET_REQUEST_MAP: Partial<Record<ResourceType, string>> = {
   stack: "GetStack",
   build: "GetBuild",
   server: "GetServer",
@@ -193,19 +164,14 @@ export const GET_REQUEST_MAP: Record<ResourceType, string> = {
   deployment: "GetDeployment",
   alerter: "GetAlerter",
   image_registry_account: "GetImageRegistryAccount",
-  sync_resource: "GetSyncResource",
-  user: "GetUser",
+  sync_resource: "GetResourceSync",
   tag: "GetTag",
-  execution: "GetExecution",
-  access_request: "GetAccessRequest",
   action: "GetAction",
   repo: "GetRepo",
   builder: "GetBuilder",
   swarm: "GetSwarm",
   variable: "GetVariable",
   user_group: "GetUserGroup",
-  alert: "GetAlert",
-  terminal: "GetTerminal",
   git_provider_account: "GetGitProviderAccount",
 };
 
@@ -226,7 +192,6 @@ export const CREATE_REQUEST_MAP: Partial<Record<ResourceType, string>> = {
   swarm: "CreateSwarm",
   variable: "CreateVariable",
   user_group: "CreateUserGroup",
-  terminal: "CreateTerminal",
   git_provider_account: "CreateGitProviderAccount",
 };
 
@@ -240,7 +205,6 @@ export const UPDATE_REQUEST_MAP: Partial<Record<ResourceType, string>> = {
   alerter: "UpdateAlerter",
   image_registry_account: "UpdateImageRegistryAccount",
   sync_resource: "UpdateResourceSync",
-  user: "UpdateUser",
   tag: "UpdateTagColor",
   action: "UpdateAction",
   repo: "UpdateRepo",
@@ -259,7 +223,7 @@ export const DELETE_REQUEST_MAP: Partial<Record<ResourceType, string>> = {
   procedure: "DeleteProcedure",
   deployment: "DeleteDeployment",
   alerter: "DeleteAlerter",
-  sync_resource: "DeleteSyncResource",
+  sync_resource: "DeleteResourceSync",
   tag: "DeleteTag",
   action: "DeleteAction",
   repo: "DeleteRepo",
@@ -267,7 +231,6 @@ export const DELETE_REQUEST_MAP: Partial<Record<ResourceType, string>> = {
   swarm: "DeleteSwarm",
   variable: "DeleteVariable",
   user_group: "DeleteUserGroup",
-  terminal: "DeleteTerminal",
   git_provider_account: "DeleteGitProviderAccount",
 };
 
@@ -276,101 +239,37 @@ export const EXECUTE_REQUEST_MAP: Record<
   ExecuteOperation,
   { route: "execute" | "read" | "write"; name: string }
 > = {
+  // Build & Deploy
   run_build: { route: "execute", name: "RunBuild" },
   deploy_stack: { route: "execute", name: "DeployStack" },
-  deploy_stack_service: { route: "execute", name: "DeployStackService" },
-  run_procedure: { route: "execute", name: "RunProcedure" },
-  run_procedure_stage: { route: "execute", name: "RunProcedureStage" },
-  run_deployment_action: { route: "execute", name: "RunDeploymentAction" },
-  run_deployment_sync: { route: "execute", name: "RunDeploymentSync" },
-  run_resource_sync: { route: "execute", name: "RunResourceSync" },
-  run_stack_refresh_cache: {
-    route: "execute",
-    name: "RunStackRefreshCache",
-  },
-  run_stack_refresh_content: {
-    route: "execute",
-    name: "RunStackRefreshContent",
-  },
-  run_stack_pull: { route: "execute", name: "RunStackPull" },
-  run_stack_pull_deployment: {
-    route: "execute",
-    name: "RunStackPullDeployment",
-  },
-  run_stack_stop: { route: "execute", name: "RunStackStop" },
-  run_stack_restart: { route: "execute", name: "RunStackRestart" },
-  run_stack_pause: { route: "execute", name: "RunStackPause" },
-  run_stack_unpause: { route: "execute", name: "RunStackUnpause" },
-  run_stack_remove_orphan_containers: {
-    route: "execute",
-    name: "RunStackRemoveOrphanContainers",
-  },
-  run_stack_toggle_service_dependencies: {
-    route: "execute",
-    name: "RunStackToggleServiceDependencies",
-  },
-  run_stack_auto_update: { route: "execute", name: "RunStackAutoUpdate" },
-  run_stack_commit: { route: "execute", name: "RunStackCommit" },
-  run_server_refresh: { route: "execute", name: "RunServerRefresh" },
-  run_server_refresh_containers: {
-    route: "execute",
-    name: "RunServerRefreshContainers",
-  },
-  run_server_update_periphery: {
-    route: "execute",
-    name: "RunServerUpdatePeriphery",
-  },
-  run_server_prune_images: {
-    route: "execute",
-    name: "RunServerPruneImages",
-  },
-  run_server_prune_containers: {
-    route: "execute",
-    name: "RunServerPruneContainers",
-  },
-  run_server_prune_networks: {
-    route: "execute",
-    name: "RunServerPruneNetworks",
-  },
-  run_server_stats: { route: "execute", name: "RunServerStats" },
-  run_server_run_command: {
-    route: "execute",
-    name: "RunServerRunCommand",
-  },
-  run_server_scripts: { route: "execute", name: "RunServerScripts" },
-  run_server_copy: { route: "execute", name: "RunServerCopy" },
-  run_server_move: { route: "execute", name: "RunServerMove" },
-  run_deployment_execute: {
-    route: "execute",
-    name: "RunDeploymentExecute",
-  },
-  run_deployment_redeploy: {
-    route: "execute",
-    name: "RunDeploymentRedeploy",
-  },
-  run_deployment_destroy: {
-    route: "execute",
-    name: "RunDeploymentDestroy",
-  },
-  run_deployment_stop: { route: "execute", name: "RunDeploymentStop" },
-  run_deployment_logs: { route: "execute", name: "RunDeploymentLogs" },
-  run_sync_deployment: { route: "execute", name: "RunSyncDeployment" },
-  get_mcp_token: { route: "execute", name: "GetMcpToken" },
+  deploy_stack_service: { route: "execute", name: "RunStackService" },
   deploy: { route: "execute", name: "Deploy" },
   deploy_stack_if_changed: { route: "execute", name: "DeployStackIfChanged" },
   destroy_stack: { route: "execute", name: "DestroyStack" },
   destroy_container: { route: "execute", name: "DestroyContainer" },
   destroy_deployment: { route: "execute", name: "DestroyDeployment" },
+  pull_stack: { route: "execute", name: "PullStack" },
+  pull_deployment: { route: "execute", name: "PullDeployment" },
+  // Repo operations
   build_repo: { route: "execute", name: "BuildRepo" },
   clone_repo: { route: "execute", name: "CloneRepo" },
   pull_repo: { route: "execute", name: "PullRepo" },
-  pull_deployment: { route: "execute", name: "PullDeployment" },
   cancel_repo_build: { route: "execute", name: "CancelRepoBuild" },
   clear_repo_cache: { route: "execute", name: "ClearRepoCache" },
+  // Procedure & Action
+  run_procedure: { route: "execute", name: "RunProcedure" },
   run_action: { route: "execute", name: "RunAction" },
+  run_sync: { route: "execute", name: "RunSync" },
   cancel_action: { route: "execute", name: "CancelAction" },
   cancel_build: { route: "execute", name: "CancelBuild" },
   cancel_procedure: { route: "execute", name: "CancelProcedure" },
+  // Stack lifecycle
+  start_stack: { route: "execute", name: "StartStack" },
+  stop_stack: { route: "execute", name: "StopStack" },
+  restart_stack: { route: "execute", name: "RestartStack" },
+  pause_stack: { route: "execute", name: "PauseStack" },
+  unpause_stack: { route: "execute", name: "UnpauseStack" },
+  // Container lifecycle
   start_container: { route: "execute", name: "StartContainer" },
   stop_container: { route: "execute", name: "StopContainer" },
   restart_container: { route: "execute", name: "RestartContainer" },
@@ -381,12 +280,32 @@ export const EXECUTE_REQUEST_MAP: Record<
   restart_all_containers: { route: "execute", name: "RestartAllContainers" },
   pause_all_containers: { route: "execute", name: "PauseAllContainers" },
   unpause_all_containers: { route: "execute", name: "UnpauseAllContainers" },
+  // Deployment lifecycle
   start_deployment: { route: "execute", name: "StartDeployment" },
   stop_deployment: { route: "execute", name: "StopDeployment" },
   restart_deployment: { route: "execute", name: "RestartDeployment" },
   pause_deployment: { route: "execute", name: "PauseDeployment" },
   unpause_deployment: { route: "execute", name: "UnpauseDeployment" },
-  start_stack: { route: "execute", name: "StartStack" },
+  // Server operations
+  run_server_refresh_containers: {
+    route: "execute",
+    name: "RunServerRefreshContainers",
+  },
+  run_server_prune_images: { route: "execute", name: "PruneImages" },
+  run_server_prune_containers: { route: "execute", name: "PruneContainers" },
+  run_server_prune_networks: { route: "execute", name: "PruneNetworks" },
+  run_server_run_command: {
+    route: "execute",
+    name: "RunServerRunCommand",
+  },
+  run_server_scripts: { route: "execute", name: "RunServerScripts" },
+  run_server_copy: { route: "execute", name: "RunServerCopy" },
+  run_server_move: { route: "execute", name: "RunServerMove" },
+  rotate_all_server_keys: {
+    route: "execute",
+    name: "RotateAllServerKeys",
+  },
+  // Docker prune & cleanup
   prune_buildx: { route: "execute", name: "PruneBuildx" },
   prune_docker_builders: { route: "execute", name: "PruneDockerBuilders" },
   prune_system: { route: "execute", name: "PruneSystem" },
@@ -394,6 +313,7 @@ export const EXECUTE_REQUEST_MAP: Record<
   delete_image: { route: "execute", name: "DeleteImage" },
   delete_network: { route: "execute", name: "DeleteNetwork" },
   delete_volume: { route: "execute", name: "DeleteVolume" },
+  // Swarm operations
   remove_swarm_nodes: { route: "execute", name: "RemoveSwarmNodes" },
   remove_swarm_services: { route: "execute", name: "RemoveSwarmServices" },
   remove_swarm_configs: { route: "execute", name: "RemoveSwarmConfigs" },
@@ -404,6 +324,7 @@ export const EXECUTE_REQUEST_MAP: Record<
   rotate_swarm_config: { route: "execute", name: "RotateSwarmConfig" },
   rotate_swarm_secret: { route: "execute", name: "RotateSwarmSecret" },
   update_swarm_node: { route: "execute", name: "UpdateSwarmNode" },
+  // Batch operations
   batch_run_build: { route: "execute", name: "BatchRunBuild" },
   batch_deploy_stack: { route: "execute", name: "BatchDeployStack" },
   batch_deploy_stack_if_changed: {
@@ -422,16 +343,12 @@ export const EXECUTE_REQUEST_MAP: Record<
     name: "BatchDestroyDeployment",
   },
   batch_destroy_stack: { route: "execute", name: "BatchDestroyStack" },
+  // Admin & misc
   backup_core_database: { route: "execute", name: "BackupCoreDatabase" },
   rotate_core_keys: { route: "execute", name: "RotateCoreKeys" },
-  rotate_all_server_keys: {
-    route: "execute",
-    name: "RotateAllServerKeys",
-  },
   global_auto_update: { route: "execute", name: "GlobalAutoUpdate" },
   send_alert: { route: "execute", name: "SendAlert" },
   test_alerter: { route: "execute", name: "TestAlerter" },
-  sleep: { route: "execute", name: "Sleep" },
 };
 
 // Maps resource_type to the summary RPC request name
@@ -517,4 +434,54 @@ export const LIST_DETAIL_REQUEST_MAP: Record<string, string> = {
   full_actions: "ListFullActions",
   full_alerters: "ListFullAlerters",
   full_resource_syncs: "ListFullResourceSyncs",
+  // Swarm detail lists
+  swarm_configs: "ListSwarmConfigs",
+  swarm_networks: "ListSwarmNetworks",
+  swarm_nodes: "ListSwarmNodes",
+  swarm_secrets: "ListSwarmSecrets",
+  swarm_services: "ListSwarmServices",
+  swarm_stacks: "ListSwarmStacks",
+  swarm_tasks: "ListSwarmTasks",
+  // Config lists
+  git_providers_from_config: "ListGitProvidersFromConfig",
+  image_registries_from_config: "ListImageRegistriesFromConfig",
+  // Extra args
+  common_build_extra_args: "ListCommonBuildExtraArgs",
+  common_deployment_extra_args: "ListCommonDeploymentExtraArgs",
+  common_stack_build_extra_args: "ListCommonStackBuildExtraArgs",
+  common_stack_extra_args: "ListCommonStackExtraArgs",
+  // Other
+  image_history: "ListImageHistory",
+  all_stack_services: "ListAllStackServices",
+};
+
+// Maps copy resource type to the Copy* RPC request name
+export const COPY_REQUEST_MAP: Record<string, string> = {
+  stack: "CopyStack",
+  build: "CopyBuild",
+  server: "CopyServer",
+  deployment: "CopyDeployment",
+  procedure: "CopyProcedure",
+  alerter: "CopyAlerter",
+  action: "CopyAction",
+  repo: "CopyRepo",
+  builder: "CopyBuilder",
+  swarm: "CopySwarm",
+  sync_resource: "CopyResourceSync",
+};
+
+// Maps rename resource type to the Rename* RPC request name
+export const RENAME_REQUEST_MAP: Record<string, string> = {
+  stack: "RenameStack",
+  build: "RenameBuild",
+  server: "RenameServer",
+  deployment: "RenameDeployment",
+  procedure: "RenameProcedure",
+  alerter: "RenameAlerter",
+  action: "RenameAction",
+  repo: "RenameRepo",
+  builder: "RenameBuilder",
+  swarm: "RenameSwarm",
+  tag: "RenameTag",
+  user_group: "RenameUserGroup",
 };
