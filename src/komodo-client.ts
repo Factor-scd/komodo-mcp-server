@@ -1,4 +1,13 @@
 import { KomodoApiError } from "./errors.js";
+import { Types } from "komodo_client";
+import type { ReadResponses, WriteResponses, ExecuteResponses } from "komodo_client";
+
+type ReadRequest = Types.ReadRequest;
+type WriteRequest = Types.WriteRequest;
+type ExecuteRequest = Types.ExecuteRequest;
+type Update = Types.Update;
+
+type Route = "read" | "write" | "execute";
 
 export class KomodoClient {
   private baseUrl: string;
@@ -19,11 +28,6 @@ export class KomodoClient {
     this.useApiKey = !!(this.apiKey && this.apiSecret);
   }
 
-  /**
-   * Returns the appropriate auth headers based on the configured auth method.
-   * API key auth (X-Api-Key / X-Api-Secret) is preferred when credentials are set;
-   * otherwise falls back to JWT Bearer token.
-   */
   private async getAuthHeaders(): Promise<Record<string, string>> {
     if (this.useApiKey) {
       return {
@@ -38,7 +42,7 @@ export class KomodoClient {
   }
 
   private async ensureAuth(): Promise<void> {
-    if (this.useApiKey) return; // No login needed for API key auth
+    if (this.useApiKey) return;
     if (this.token) return;
     await this.login();
   }
@@ -47,7 +51,6 @@ export class KomodoClient {
     const res = await fetch(`${this.baseUrl}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      // Komodo Core v2.3.3 login shape (verified live): {type, params}
       body: JSON.stringify({
         type: "LoginLocalUser",
         params: {
@@ -61,7 +64,6 @@ export class KomodoClient {
       const text = await res.text().catch(() => "");
       throw new Error(`Komodo login failed (${res.status}): ${text}`);
     }
-    // Response shape: {type, data: {jwt}} — NOT raw text
     const body = (await res.json()) as { data?: { jwt?: string } };
     const jwt = body?.data?.jwt;
     if (!jwt) {
@@ -70,8 +72,8 @@ export class KomodoClient {
     this.token = jwt;
   }
 
-  async rpc(
-    route: "read" | "write" | "execute",
+  private async rawRpc(
+    route: Route,
     requestName: string,
     params: Record<string, unknown> = {},
   ): Promise<unknown> {
@@ -96,7 +98,6 @@ export class KomodoClient {
     const authHeaders = await this.getAuthHeaders();
     let res = await attempt(authHeaders);
 
-    // Auto-refresh on 401 (JWT only)
     if (res.status === 401 && !this.useApiKey) {
       this.token = null;
       await this.login();
@@ -128,5 +129,81 @@ export class KomodoClient {
     } catch {
       return text;
     }
+  }
+
+  async rpc(
+    route: "read",
+    requestName: string,
+    params?: Record<string, unknown>,
+  ): Promise<ReadResponses[ReadRequest["type"]]>;
+  async rpc(
+    route: "write",
+    requestName: string,
+    params?: Record<string, unknown>,
+  ): Promise<WriteResponses[WriteRequest["type"]]>;
+  async rpc(
+    route: "execute",
+    requestName: string,
+    params?: Record<string, unknown>,
+  ): Promise<ExecuteResponses[ExecuteRequest["type"]]>;
+  async rpc(
+    route: Route,
+    requestName: string,
+    params?: Record<string, unknown>,
+  ): Promise<unknown>;
+  async rpc(
+    route: Route,
+    requestName: string,
+    params: Record<string, unknown> = {},
+  ): Promise<unknown> {
+    return this.rawRpc(route, requestName, params);
+  }
+
+  async executeAndPoll(
+    requestName: ExecuteRequest["type"],
+    params: Record<string, unknown> = {},
+    opts: { pollIntervalMs?: number; timeoutMs?: number } = {},
+  ): Promise<Update> {
+    const { pollIntervalMs = 1000, timeoutMs = 300_000 } = opts;
+
+    const result = await this.rawRpc("execute", requestName, params);
+
+    if (Array.isArray(result)) {
+      const first = (result as Record<string, unknown>[])[0];
+      if (first && first.status === "Err") {
+        throw new Error(`Batch execute failed: ${JSON.stringify(first.data)}`);
+      }
+      const update = result[0] as unknown as Update;
+      if (update.status === "Complete" || !update._id?.$oid) {
+        return update;
+      }
+      return this.pollUntilComplete(update._id.$oid, pollIntervalMs, timeoutMs);
+    }
+
+    const update = result as unknown as Update;
+    if (update.status === "Complete" || !update._id?.$oid) {
+      return update;
+    }
+    return this.pollUntilComplete(update._id.$oid, pollIntervalMs, timeoutMs);
+  }
+
+  private async pollUntilComplete(
+    updateId: string,
+    intervalMs: number,
+    timeoutMs: number,
+  ): Promise<Update> {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, intervalMs));
+      const update = (await this.rawRpc("read", "GetUpdate", {
+        id: updateId,
+      })) as Update;
+      if (update.status === "Complete") {
+        return update;
+      }
+    }
+    throw new Error(
+      `Timed out polling update ${updateId} after ${timeoutMs}ms`,
+    );
   }
 }
