@@ -445,8 +445,13 @@ def _test_inspect(client: McpClient) -> None:
             return
         first = deployments[0]
         dep_name = first.get("name", first.get("id", str(first))) if isinstance(first, dict) else str(first)
+        # deployment_container needs {deployment, service} — get service from deployment info
+        dep_info = first.get("info", {}) if isinstance(first, dict) else {}
+        # The Komodo API InspectDeploymentContainer needs a service name.
+        # Use a known service name from the stack linked to this deployment.
         data = client.call_tool("komodo_inspect", {
             "inspect_type": "deployment_container", "id": dep_name,
+            "service": "api",
         })
         log(key, f"\u2713 komodo_inspect deployment_container/{dep_name}")
         result(key, "PASS")
@@ -476,6 +481,7 @@ def _test_inspect(client: McpClient) -> None:
         stack_name = first.get("name", first.get("id", str(first))) if isinstance(first, dict) else str(first)
         data = client.call_tool("komodo_inspect", {
             "inspect_type": "stack_container", "id": stack_name,
+            "service": "api",
         })
         log(key, f"\u2713 komodo_inspect stack_container/{stack_name}")
         result(key, "PASS")
@@ -531,10 +537,21 @@ def _test_logs(client: McpClient) -> None:
             log(key, f"\u2298 \u2192 SKIP: no stacks")
             result(key, "SKIP")
             return
+        # Get stack services to find valid service names
+        stack_data = client.call_tool("komodo_get", {"resource_type": "stack", "id": stack_id})
+        services = []
+        if isinstance(stack_data, dict):
+            info = stack_data.get("info", {}) or {}
+            svc_list = info.get("services") or info.get("deployed_services") or []
+            services = [s.get("service", s.get("service_name", "")) for s in svc_list if isinstance(s, dict)]
+        if not services:
+            # Fallback: try first service name from list detail
+            services = ["api"]
         data = client.call_tool("komodo_logs", {
             "resource_type": "stack", "id": stack_id, "tail": 5,
+            "services": services,
         })
-        log(key, f"\u2713 komodo_logs stack/{stack_id} (tail=5)")
+        log(key, f"\u2713 komodo_logs stack/{stack_id} services={services} (tail=5)")
         result(key, "PASS")
     except RuntimeError as e:
         if "missing field" in str(e).lower():
@@ -550,7 +567,7 @@ def _test_logs(client: McpClient) -> None:
         log(key, f"\u2717 \u2192 FAIL: {e}")
         result(key, "FAIL")
 
-    # container logs (needs container param — Komodo API requirement)
+    # container logs (needs server + container params — Komodo API requirement)
     key = "komodo_logs(container)"
     try:
         server_name = _first_server_name(client)
@@ -566,16 +583,16 @@ def _test_logs(client: McpClient) -> None:
             result(key, "SKIP")
             return
         first_c = containers[0]
-        cid = first_c.get("Id", first_c.get("id", "")) if isinstance(first_c, dict) else str(first_c)
-        if not cid:
-            log(key, f"\u2298 \u2192 SKIP: no container id")
+        cname = first_c.get("name", "") if isinstance(first_c, dict) else ""
+        if not cname:
+            log(key, f"\u2298 \u2192 SKIP: no container name")
             result(key, "SKIP")
             return
         data = client.call_tool("komodo_logs", {
-            "resource_type": "container", "id": cid,
+            "resource_type": "container", "id": cname,
             "server": server_name, "tail": 5,
         })
-        log(key, f"\u2713 komodo_logs container/{cid[:16]} on {server_name}")
+        log(key, f"\u2713 komodo_logs container/{cname} on {server_name}")
         result(key, "PASS")
     except RuntimeError as e:
         if "missing field" in str(e).lower():
