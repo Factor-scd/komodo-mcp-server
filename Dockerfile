@@ -1,6 +1,6 @@
 FROM node:22-alpine AS build
 WORKDIR /app
-ARG BUILD_CACHE_BUST=20260908
+ARG BUILD_CACHE_BUST=20260908-2
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY tsconfig.json ./
