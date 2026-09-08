@@ -32,7 +32,10 @@ export async function handleUpdate(
     );
   }
 
-  const result = await client.rpc("write", requestName, { id, ...params });
+  // Tag update uses {tag} instead of {id} (same INSPECT_PARAM_KEY pattern)
+  const body =
+    resource_type === "tag" ? { tag: id, ...params } : { id, ...params };
+  const result = await client.rpc("write", requestName, body);
 
   return {
     content: [

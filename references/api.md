@@ -112,7 +112,7 @@ Full reference of Komodo RPC endpoints and which MCP tool handles them.
 | `write/CreateAlerter` | alerter |
 | `write/CreateImageRegistryAccount` | image_registry_account |
 | `write/CreateResourceSync` | sync_resource |
-| `write/AddTag` | tag |
+| `write/CreateTag` | tag |
 | `write/CreateAction` | action |
 | `write/CreateRepo` | repo |
 | `write/CreateBuilder` | builder |
@@ -138,7 +138,7 @@ Full reference of Komodo RPC endpoints and which MCP tool handles them.
 | `write/UpdateImageRegistryAccount` | image_registry_account |
 | `write/UpdateResourceSync` | sync_resource |
 | `write/UpdateUser` | user |
-| `write/UpdateTag` | tag |
+| `write/UpdateTagColor` | tag |
 | `write/UpdateAction` | action |
 | `write/UpdateRepo` | repo |
 | `write/UpdateBuilder` | builder |
