@@ -101,7 +101,6 @@ Full reference of Komodo RPC endpoints (OpenAPI v2.3.3) and which MCP tool handl
 | `write/UpdateBuilder` | builder |
 | `write/UpdateSwarm` | swarm |
 | `write/UpdateVariableValue` | variable |
-| `write/UpdateUserGroup` | user_group |
 | `write/UpdateGitProviderAccount` | git_provider_account |
 
 ---
@@ -198,14 +197,9 @@ Full reference of Komodo RPC endpoints (OpenAPI v2.3.3) and which MCP tool handl
 ### Server Operations
 | Operation | Komodo RPC |
 |-----------|------------|
-| `run_server_refresh_containers` | `execute/RunServerRefreshContainers` |
 | `run_server_prune_images` | `execute/PruneImages` |
 | `run_server_prune_containers` | `execute/PruneContainers` |
 | `run_server_prune_networks` | `execute/PruneNetworks` |
-| `run_server_run_command` | `execute/RunServerRunCommand` |
-| `run_server_scripts` | `execute/RunServerScripts` |
-| `run_server_copy` | `execute/RunServerCopy` |
-| `run_server_move` | `execute/RunServerMove` |
 | `rotate_all_server_keys` | `execute/RotateAllServerKeys` |
 
 ### Docker Prune & Cleanup

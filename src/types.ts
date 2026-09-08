@@ -70,14 +70,9 @@ export const ExecuteOperation = z.enum([
   "pause_deployment",
   "unpause_deployment",
   // Server operations
-  "run_server_refresh_containers",
   "run_server_prune_images",
   "run_server_prune_containers",
   "run_server_prune_networks",
-  "run_server_run_command",
-  "run_server_scripts",
-  "run_server_copy",
-  "run_server_move",
   "rotate_all_server_keys",
   // Docker prune & cleanup
   "prune_buildx",
@@ -211,7 +206,6 @@ export const UPDATE_REQUEST_MAP: Partial<Record<ResourceType, string>> = {
   builder: "UpdateBuilder",
   swarm: "UpdateSwarm",
   variable: "UpdateVariableValue",
-  user_group: "UpdateUserGroup",
   git_provider_account: "UpdateGitProviderAccount",
 };
 
@@ -287,20 +281,9 @@ export const EXECUTE_REQUEST_MAP: Record<
   pause_deployment: { route: "execute", name: "PauseDeployment" },
   unpause_deployment: { route: "execute", name: "UnpauseDeployment" },
   // Server operations
-  run_server_refresh_containers: {
-    route: "execute",
-    name: "RunServerRefreshContainers",
-  },
   run_server_prune_images: { route: "execute", name: "PruneImages" },
   run_server_prune_containers: { route: "execute", name: "PruneContainers" },
   run_server_prune_networks: { route: "execute", name: "PruneNetworks" },
-  run_server_run_command: {
-    route: "execute",
-    name: "RunServerRunCommand",
-  },
-  run_server_scripts: { route: "execute", name: "RunServerScripts" },
-  run_server_copy: { route: "execute", name: "RunServerCopy" },
-  run_server_move: { route: "execute", name: "RunServerMove" },
   rotate_all_server_keys: {
     route: "execute",
     name: "RotateAllServerKeys",

@@ -59,7 +59,7 @@ function createServerInstance(): McpServer {
 
   server.registerTool("komodo_execute", {
     description:
-      "Execute a Komodo operation. Operations include: build/deploy (run_build, deploy, deploy_stack, destroy_stack, pull_stack), repo (build_repo, clone_repo, pull_repo), procedure/action (run_procedure, run_action, run_sync), stack lifecycle (start/stop/restart/pause/unpause), container lifecycle, deployment lifecycle, server ops (refresh_containers, prune_images/containers/networks, run_command, scripts, copy, move), swarm ops (remove nodes/services/configs/secrets/stacks, create/rotate config/secret), batch ops, and admin (backup_core_database, rotate_core_keys, global_auto_update, send_alert, test_alerter).",
+      "Execute a Komodo operation. Operations include: build/deploy (run_build, deploy, deploy_stack, destroy_stack, pull_stack), repo (build_repo, clone_repo, pull_repo), procedure/action (run_procedure, run_action, run_sync), stack lifecycle (start/stop/restart/pause/unpause), container lifecycle, deployment lifecycle, server ops (prune_images/containers/networks, rotate_all_server_keys), swarm ops (remove nodes/services/configs/secrets/stacks, create/rotate config/secret), batch ops, and admin (backup_core_database, rotate_core_keys, global_auto_update, send_alert, test_alerter). Server-scoped ops (prune_*, delete_*) require the server name in the id field.",
     inputSchema: executeInputSchema,
   }, async (args) => handleExecute(args, client));
 

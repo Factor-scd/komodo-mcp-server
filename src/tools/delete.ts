@@ -5,7 +5,6 @@ import { ResourceType, DELETE_REQUEST_MAP } from "../types.js";
 // Some DELETE endpoints expect a different param key instead of { id }.
 // Verified live against Core v2.3.3 error messages.
 const DELETE_PARAM_KEY: Record<string, string> = {
-  tag: "tag",
   variable: "name",
   user_group: "user_group",
 };
