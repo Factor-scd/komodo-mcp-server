@@ -78,6 +78,15 @@ const OPERATION_PARAM_KEY: Record<string, string> = {
   global_auto_update: "_none",
   send_alert: "alert",
   test_alerter: "alerter",
+  // Troubleshooting / refresh
+  refresh_server: "server",
+  refresh_server_containers: "server",
+  refresh_stack_cache: "stack",
+  refresh_stack_content: "stack",
+  remove_orphan_containers: "stack",
+  check_stack_for_update: "stack",
+  check_deployment_for_update: "deployment",
+  get_mcp_token: "_none",
 };
 
 // Operations that need {server: <value>} alongside the entity param

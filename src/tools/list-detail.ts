@@ -20,6 +20,8 @@ const listDetailType = z.enum([
   "common_stack_build_extra_args", "common_stack_extra_args",
   // Other
   "image_history", "all_stack_services",
+  // Troubleshooting
+  "terminals", "alerts", "containers_summary",
 ]);
 
 export const listDetailInputSchema = {

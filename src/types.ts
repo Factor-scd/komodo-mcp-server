@@ -100,7 +100,16 @@ export const ExecuteOperation = z.enum([
   "backup_core_database",
   "global_auto_update",
   "rotate_all_server_keys",
-  "rotate_core_keys"
+  "rotate_core_keys",
+  // Troubleshooting / refresh
+  "refresh_server",
+  "refresh_server_containers",
+  "refresh_stack_cache",
+  "refresh_stack_content",
+  "remove_orphan_containers",
+  "check_stack_for_update",
+  "check_deployment_for_update",
+  "get_mcp_token",
 ]);
 export type ExecuteOperation = z.infer<typeof ExecuteOperation>;
 
@@ -294,7 +303,16 @@ export const EXECUTE_REQUEST_MAP: Record<
   unpause_container: {"route":"execute","name":"UnpauseContainer"},
   unpause_deployment: {"route":"execute","name":"UnpauseDeployment"},
   unpause_stack: {"route":"execute","name":"UnpauseStack"},
-  update_swarm_node: {"route":"execute","name":"UpdateSwarmNode"}
+  update_swarm_node: {"route":"execute","name":"UpdateSwarmNode"},
+  // Troubleshooting / refresh
+  refresh_server: {"route":"execute","name":"RunServerRefresh"},
+  refresh_server_containers: {"route":"execute","name":"RunServerRefreshContainers"},
+  refresh_stack_cache: {"route":"execute","name":"RunStackRefreshCache"},
+  refresh_stack_content: {"route":"execute","name":"RunStackRefreshContent"},
+  remove_orphan_containers: {"route":"execute","name":"RunStackRemoveOrphanContainers"},
+  check_stack_for_update: {"route":"execute","name":"CheckStackForUpdate"},
+  check_deployment_for_update: {"route":"execute","name":"CheckDeploymentForUpdate"},
+  get_mcp_token: {"route":"execute","name":"GetMcpToken"},
 };
 
 export const SUMMARY_REQUEST_MAP: Partial<Record<ResourceType, string>> = {
@@ -386,7 +404,11 @@ export const LIST_DETAIL_REQUEST_MAP: Record<string, string> = {
   common_stack_build_extra_args: "ListCommonStackBuildExtraArgs",
   common_stack_extra_args: "ListCommonStackExtraArgs",
   image_history: "ListImageHistory",
-  all_stack_services: "ListAllStackServices"
+  all_stack_services: "ListAllStackServices",
+  // Troubleshooting additions
+  terminals: "ListTerminals",
+  alerts: "ListAlerts",
+  containers_summary: "GetContainersSummary",
 };
 
 export const COPY_REQUEST_MAP: Record<string, string> = {
@@ -417,4 +439,35 @@ export const RENAME_REQUEST_MAP: Record<string, string> = {
   sync_resource: "RenameResourceSync",
   tag: "RenameTag",
   user_group: "RenameUserGroup"
+};
+
+export const SERVER_STATS_REQUEST_MAP: Record<string, string> = {
+  system_information: "GetSystemInformation",
+  system_stats: "GetSystemStats",
+  historical_server_stats: "GetHistoricalServerStats",
+  server_state: "GetServerState",
+  periphery_information: "GetPeripheryInformation",
+  containers_summary: "GetContainersSummary",
+  version: "GetVersion",
+  core_info: "GetCoreInfo",
+};
+
+export const RESOURCE_STATS_REQUEST_MAP: Record<string, string> = {
+  deployment_stats: "GetDeploymentStats",
+  deployment_container: "GetDeploymentContainer",
+  build_monthly_stats: "GetBuildMonthlyStats",
+  concurrency_limit_usage: "GetConcurrencyLimitUsage",
+  resource_matching_container: "GetResourceMatchingContainer",
+};
+
+export const ACTION_STATE_REQUEST_MAP: Record<string, string> = {
+  action: "GetActionActionState",
+  build: "GetBuildActionState",
+  deployment: "GetDeploymentActionState",
+  procedure: "GetProcedureActionState",
+  repo: "GetRepoActionState",
+  server: "GetServerActionState",
+  stack: "GetStackActionState",
+  swarm: "GetSwarmActionState",
+  sync_resource: "GetResourceSyncActionState",
 };

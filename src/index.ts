@@ -16,6 +16,9 @@ import { searchLogsInputSchema, handleSearchLogs } from "./tools/search-logs.js"
 import { listDetailInputSchema, handleListDetail } from "./tools/list-detail.js";
 import { copyInputSchema, handleCopy } from "./tools/copy.js";
 import { renameInputSchema, handleRename } from "./tools/rename.js";
+import { serverStatsInputSchema, handleServerStats } from "./tools/server-stats.js";
+import { resourceStatsInputSchema, handleResourceStats } from "./tools/resource-stats.js";
+import { updatesInputSchema, handleUpdates } from "./tools/updates.js";
 
 const PORT = parseInt(process.env.PORT || "9800", 10);
 
@@ -119,6 +122,24 @@ function createServerInstance(client: KomodoClient): McpServer {
       "Rename a Komodo resource. resource_type: stack, build, server, deployment, procedure, alerter, action, repo, builder, swarm, tag, user_group. Provide id and the new name.",
     inputSchema: renameInputSchema,
   }, async (args) => handleRename(args, client));
+
+  server.registerTool("komodo_server_stats", {
+    description:
+      "Get server diagnostics. stat_type: system_information (OS/CPU/hardware), system_stats (live CPU/mem/disk), historical_server_stats (timeseries), server_state (connectivity), periphery_information (agent info), containers_summary (aggregate counts), version (Core API version), core_info (Core configuration).",
+    inputSchema: serverStatsInputSchema,
+  }, async (args) => handleServerStats(args, client));
+
+  server.registerTool("komodo_resource_stats", {
+    description:
+      "Get resource diagnostics. stat_type: deployment_stats (CPU/mem/net usage), deployment_container (container details), build_monthly_stats (build frequency), action_state (is resource currently running — requires resource_type param), concurrency_limit_usage (active limits), resource_matching_container (reverse-lookup container → resource).",
+    inputSchema: resourceStatsInputSchema,
+  }, async (args) => handleResourceStats(args, client));
+
+  server.registerTool("komodo_updates", {
+    description:
+      "Get execution history and logs. mode: get (retrieve specific update by ID with full structured logs including stage/command/stdout/stderr), list (list recent operations with status/success/target). Use list to find recent executions, then get with the update ID to see full logs.",
+    inputSchema: updatesInputSchema,
+  }, async (args) => handleUpdates(args, client));
 
   return server;
 }
