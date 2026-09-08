@@ -2,6 +2,14 @@ import { z } from "zod";
 import { KomodoClient } from "../komodo-client.js";
 import { ResourceType, DELETE_REQUEST_MAP } from "../types.js";
 
+// Some DELETE endpoints expect a different param key instead of { id }.
+// Verified live against Core v2.3.3 error messages.
+const DELETE_PARAM_KEY: Record<string, string> = {
+  tag: "tag",
+  variable: "name",
+  user_group: "user_group",
+};
+
 export const deleteInputSchema = {
   resource_type: ResourceType.describe(
     "Resource type to delete (stack, build, server, procedure, deployment, alerter, sync_resource, tag)",
@@ -22,7 +30,8 @@ export async function handleDelete(
     );
   }
 
-  const result = await client.rpc("write", requestName, { id });
+  const paramKey = DELETE_PARAM_KEY[resource_type] || "id";
+  const result = await client.rpc("write", requestName, { [paramKey]: id });
 
   return {
     content: [
