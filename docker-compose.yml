@@ -1,0 +1,12 @@
+services:
+  mcp:
+    build: .
+    container_name: komodo-mcp-server
+    ports:
+      - "9800:9800"
+    environment:
+      - KOMODO_BASE_URL=${KOMODO_BASE_URL:-http://10.10.2.114:9120}
+      - KOMODO_API_KEY=${KOMODO_API_KEY}
+      - KOMODO_API_SECRET=${KOMODO_API_SECRET}
+      - PORT=9800
+    restart: unless-stopped
