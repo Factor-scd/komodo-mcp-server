@@ -33,10 +33,6 @@ export async function handleRename(
   }
 
   const params: Record<string, unknown> = { id, name };
-  if (resource_type === "tag") {
-    params.tag = id;
-    delete params.id;
-  }
 
   const result = await client.rpc("write", requestName, params);
 
