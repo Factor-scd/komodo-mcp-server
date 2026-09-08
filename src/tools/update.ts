@@ -2,9 +2,16 @@ import { z } from "zod";
 import { KomodoClient } from "../komodo-client.js";
 import { ResourceType, UPDATE_REQUEST_MAP } from "../types.js";
 
+// Some UPDATE endpoints expect a different param key instead of { id }.
+// Verified live against Core v2.3.3 error messages.
+const UPDATE_PARAM_KEY: Record<string, string> = {
+  tag: "tag",
+  variable: "name",
+};
+
 export const updateInputSchema = {
   resource_type: ResourceType.describe(
-    "Resource type to update (stack, build, server, procedure, deployment, alerter, image_registry_account, sync_resource, user, tag)",
+    "Resource type to update (stack, build, server, procedure, deployment, alerter, image_registry_account, sync_resource, tag, action, repo, builder, swarm, variable, git_provider_account)",
   ),
   id: z.string().describe("Resource ID or name to update"),
   params: z
@@ -32,9 +39,8 @@ export async function handleUpdate(
     );
   }
 
-  // Tag update uses {tag} instead of {id} (same INSPECT_PARAM_KEY pattern)
-  const body =
-    resource_type === "tag" ? { tag: id, ...params } : { id, ...params };
+  const paramKey = UPDATE_PARAM_KEY[resource_type] || "id";
+  const body = { [paramKey]: id, ...params };
   const result = await client.rpc("write", requestName, body);
 
   return {
