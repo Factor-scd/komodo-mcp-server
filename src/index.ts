@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { randomUUID } from "node:crypto";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { KomodoClient } from "./komodo-client.js";
+import { KomodoClient, type KomodoCredentials } from "./komodo-client.js";
 import { listInputSchema, handleList } from "./tools/list.js";
 import { getInputSchema, handleGet } from "./tools/get.js";
 import { createInputSchema, handleCreate } from "./tools/create.js";
@@ -18,13 +18,28 @@ import { copyInputSchema, handleCopy } from "./tools/copy.js";
 import { renameInputSchema, handleRename } from "./tools/rename.js";
 
 const PORT = parseInt(process.env.PORT || "9800", 10);
-const client = new KomodoClient();
-const transports: Record<string, StreamableHTTPServerTransport> = {};
 
-function createServerInstance(): McpServer {
+interface Session {
+  transport: StreamableHTTPServerTransport;
+  client: KomodoClient;
+}
+const sessions: Record<string, Session> = {};
+
+function extractCredentials(req: IncomingMessage): KomodoCredentials {
+  const h = (name: string) => (req.headers[name] as string) || undefined;
+  return {
+    baseUrl: h("x-komodo-base-url"),
+    apiKey: h("x-komodo-api-key"),
+    apiSecret: h("x-komodo-api-secret"),
+    username: h("x-komodo-username"),
+    password: h("x-komodo-password"),
+  };
+}
+
+function createServerInstance(client: KomodoClient): McpServer {
   const server = new McpServer({
     name: "komodo-mcp-server",
-    version: "2.1.0",
+    version: "2.2.0",
   });
 
   server.registerTool("komodo_list", {
@@ -41,7 +56,7 @@ function createServerInstance(): McpServer {
 
   server.registerTool("komodo_create", {
     description:
-      "Create a new Komodo resource. resource_type: stack, build, server, procedure, deployment, alerter, image_registry_account, sync_resource, tag, action, repo, builder, swarm, variable, user_group, git_provider_account. Provide params object with Create* endpoint fields.",
+      "Create a new Komodo resource. resource_type: stack, build, server, procedure, deployment, alerter, image_registry_account, sync_resource, user, tag, action, repo, builder, swarm, variable, user_group, git_provider_account. Provide params object with Create* endpoint fields.",
     inputSchema: createInputSchema,
   }, async (args) => handleCreate(args, client));
 
@@ -125,12 +140,11 @@ function parseBody(req: IncomingMessage): Promise<unknown> {
 }
 
 const httpServer = createServer(async (req, res) => {
-  // CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
   res.setHeader(
     "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, mcp-session-id, X-Api-Key, X-Api-Secret",
+    "Content-Type, Authorization, mcp-session-id, X-Komodo-Base-Url, X-Komodo-Api-Key, X-Komodo-Api-Secret, X-Komodo-Username, X-Komodo-Password",
   );
 
   if (req.method === "OPTIONS") {
@@ -139,47 +153,47 @@ const httpServer = createServer(async (req, res) => {
     return;
   }
 
-  // Health check
   if (req.method === "GET" && req.url === "/health") {
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ status: "ok", name: "komodo-mcp-server", version: "2.1.0" }));
+    res.end(JSON.stringify({ status: "ok", name: "komodo-mcp-server", version: "2.2.0" }));
     return;
   }
 
-  // MCP endpoint
   if (req.url === "/mcp" || req.url?.startsWith("/mcp?")) {
     const sessionId = req.headers["mcp-session-id"] as string | undefined;
 
     if (req.method === "POST") {
       const body = await parseBody(req);
 
-      // Check if this is an initialize request (no existing session)
       const isInitialize =
         !sessionId ||
-        !transports[sessionId] ||
+        !sessions[sessionId] ||
         (body && typeof body === "object" && "method" in body && body.method === "initialize");
 
-      if (isInitialize && (!sessionId || !transports[sessionId])) {
+      if (isInitialize && (!sessionId || !sessions[sessionId])) {
+        const creds = extractCredentials(req);
+        const client = new KomodoClient(creds);
+
         const transport = new StreamableHTTPServerTransport({
           sessionIdGenerator: () => randomUUID(),
           onsessioninitialized: (sid) => {
-            transports[sid] = transport;
+            sessions[sid] = { transport, client };
           },
         });
 
         transport.onclose = () => {
           const sid = transport.sessionId;
-          if (sid) delete transports[sid];
+          if (sid) delete sessions[sid];
         };
 
-        const server = createServerInstance();
+        const server = createServerInstance(client);
         await server.connect(transport);
         await transport.handleRequest(req, res, body);
         return;
       }
 
-      if (sessionId && transports[sessionId]) {
-        const transport = transports[sessionId];
+      if (sessionId && sessions[sessionId]) {
+        const { transport } = sessions[sessionId];
         await transport.handleRequest(req, res, body);
         return;
       }
@@ -195,13 +209,13 @@ const httpServer = createServer(async (req, res) => {
       return;
     }
 
-    if (req.method === "GET" && sessionId && transports[sessionId]) {
-      await transports[sessionId].handleRequest(req, res);
+    if (req.method === "GET" && sessionId && sessions[sessionId]) {
+      await sessions[sessionId].transport.handleRequest(req, res);
       return;
     }
 
-    if (req.method === "DELETE" && sessionId && transports[sessionId]) {
-      await transports[sessionId].handleRequest(req, res);
+    if (req.method === "DELETE" && sessionId && sessions[sessionId]) {
+      await sessions[sessionId].transport.handleRequest(req, res);
       return;
     }
 
@@ -223,15 +237,15 @@ const httpServer = createServer(async (req, res) => {
 httpServer.listen(PORT, "0.0.0.0", () => {
   console.log(`Komodo MCP Server listening on http://0.0.0.0:${PORT}/mcp`);
   console.log(`Health check: http://0.0.0.0:${PORT}/health`);
-  console.log(`Komodo URL: ${process.env.KOMODO_BASE_URL || process.env.KOMODO_URL || "http://10.10.2.114:9120"}`);
+  console.log(`Komodo credentials: from client headers (X-Komodo-*) or env vars`);
 });
 
 process.on("SIGINT", async () => {
   console.log("\nShutting down...");
-  for (const sid of Object.keys(transports)) {
+  for (const sid of Object.keys(sessions)) {
     try {
-      await transports[sid].close();
-      delete transports[sid];
+      await sessions[sid].transport.close();
+      delete sessions[sid];
     } catch {}
   }
   httpServer.close();

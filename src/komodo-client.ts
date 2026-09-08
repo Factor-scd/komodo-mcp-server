@@ -9,6 +9,14 @@ type Update = Types.Update;
 
 type Route = "read" | "write" | "execute";
 
+export interface KomodoCredentials {
+  baseUrl?: string;
+  apiKey?: string;
+  apiSecret?: string;
+  username?: string;
+  password?: string;
+}
+
 export class KomodoClient {
   private baseUrl: string;
   private username: string;
@@ -18,13 +26,13 @@ export class KomodoClient {
   private token: string | null = null;
   private useApiKey: boolean;
 
-  constructor() {
+  constructor(creds?: KomodoCredentials) {
     this.baseUrl =
-      process.env.KOMODO_BASE_URL || process.env.KOMODO_URL || "http://10.10.2.114:9120";
-    this.username = process.env.KOMODO_USERNAME || process.env.KOMODO_INIT_ADMIN_USERNAME || "";
-    this.password = process.env.KOMODO_PASSWORD || process.env.KOMODO_INIT_ADMIN_PASSWORD || "";
-    this.apiKey = process.env.KOMODO_API_KEY || null;
-    this.apiSecret = process.env.KOMODO_API_SECRET || null;
+      creds?.baseUrl || process.env.KOMODO_BASE_URL || process.env.KOMODO_URL || "http://10.10.2.114:9120";
+    this.username = creds?.username || process.env.KOMODO_USERNAME || process.env.KOMODO_INIT_ADMIN_USERNAME || "";
+    this.password = creds?.password || process.env.KOMODO_PASSWORD || process.env.KOMODO_INIT_ADMIN_PASSWORD || "";
+    this.apiKey = creds?.apiKey || process.env.KOMODO_API_KEY || null;
+    this.apiSecret = creds?.apiSecret || process.env.KOMODO_API_SECRET || null;
     this.useApiKey = !!(this.apiKey && this.apiSecret);
   }
 
