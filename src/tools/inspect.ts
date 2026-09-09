@@ -8,6 +8,7 @@ const InspectType = z.enum([
   "stack_container", "stack_swarm_info", "stack_swarm_service",
   "swarm", "swarm_config", "swarm_node", "swarm_secret",
   "swarm_service", "swarm_stack", "swarm_task",
+  "builder",
 ]);
 
 // Types that need {deployment/stack, service} instead of {id}
@@ -51,6 +52,9 @@ export async function handleInspect(
     params.stack = id;
     if (service) params.service = service;
     if (server) params.server = server;
+  } else if (inspect_type === "builder") {
+    // GetBuilder: {builder}
+    params.builder = id;
   } else {
     const paramKey = server ? INSPECT_PARAM_KEY[inspect_type] : undefined;
     if (paramKey) {

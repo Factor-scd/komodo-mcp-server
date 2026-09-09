@@ -19,6 +19,8 @@ import { renameInputSchema, handleRename } from "./tools/rename.js";
 import { serverStatsInputSchema, handleServerStats } from "./tools/server-stats.js";
 import { resourceStatsInputSchema, handleResourceStats } from "./tools/resource-stats.js";
 import { updatesInputSchema, handleUpdates } from "./tools/updates.js";
+import { statusInputSchema, handleStatus } from "./tools/status.js";
+import { resourceLogsInputSchema, handleResourceLogs } from "./tools/resource-logs.js";
 
 const PORT = parseInt(process.env.PORT || "9800", 10);
 
@@ -83,7 +85,7 @@ function createServerInstance(client: KomodoClient): McpServer {
 
   server.registerTool("komodo_logs", {
     description:
-      "Get logs for a Komodo resource. resource_type: deployment (GetDeploymentLog), stack (GetStackLog), container (GetContainerLog), swarm_service (GetSwarmServiceLog). Returns log lines as text.",
+      "Get logs for a Komodo resource. resource_type: deployment (GetDeploymentLog), stack (GetStackLog), container (GetContainerLog), swarm_service (GetSwarmServiceLog), build (resolves builder container and fetches real build logs, falls back to build resource info). Returns log lines as text.",
     inputSchema: logsInputSchema,
   }, async (args) => handleLogs(args, client));
 
@@ -95,7 +97,7 @@ function createServerInstance(client: KomodoClient): McpServer {
 
   server.registerTool("komodo_inspect", {
     description:
-      "Inspect a Docker object. inspect_type: container, image, network, volume, deployment_container, deployment_swarm_service, stack_container, stack_swarm_info, stack_swarm_service, swarm, swarm_config, swarm_node, swarm_secret, swarm_service, swarm_stack, swarm_task. Provide id and optional server name.",
+      "Inspect a Docker object or resource. inspect_type: container, image, network, volume, deployment_container, deployment_swarm_service, stack_container, stack_swarm_info, stack_swarm_service, swarm, swarm_config, swarm_node, swarm_secret, swarm_service, swarm_stack, swarm_task, builder. Provide id and optional server name.",
     inputSchema: inspectInputSchema,
   }, async (args) => handleInspect(args, client));
 
@@ -140,6 +142,18 @@ function createServerInstance(client: KomodoClient): McpServer {
       "Get execution history and logs. mode: get (retrieve specific update by ID with full structured logs including stage/command/stdout/stderr), list (list recent operations with status/success/target). Use list to find recent executions, then get with the update ID to see full logs.",
     inputSchema: updatesInputSchema,
   }, async (args) => handleUpdates(args, client));
+
+  server.registerTool("komodo_status", {
+    description:
+      "Check the status of any Komodo resource by name or ID. Auto-detects resource type (stack, build, server, deployment, procedure, repo, action, alerter, builder, swarm, sync_resource). Returns state, health, active operations, and relevant details. Optionally pass type to skip auto-detection.",
+    inputSchema: statusInputSchema,
+  }, async (args) => handleStatus(args, client));
+
+  server.registerTool("komodo_resource_logs", {
+    description:
+      "Get logs for any Komodo resource by name or ID. Auto-detects resource type and fetches the appropriate logs. For builds, resolves the builder container and fetches real build logs. For deployments/stacks, fetches the container/service logs. Optionally pass type to skip auto-detection.",
+    inputSchema: resourceLogsInputSchema,
+  }, async (args) => handleResourceLogs(args, client));
 
   return server;
 }

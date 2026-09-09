@@ -352,7 +352,8 @@ export const INSPECT_REQUEST_MAP: Record<string, string> = {
   swarm_secret: "InspectSwarmSecret",
   swarm_service: "InspectSwarmService",
   swarm_stack: "InspectSwarmStack",
-  swarm_task: "InspectSwarmTask"
+  swarm_task: "InspectSwarmTask",
+  builder: "GetBuilder"
 };
 
 export const SEARCH_LOG_REQUEST_MAP: Record<string, string> = {
