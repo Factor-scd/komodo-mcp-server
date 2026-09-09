@@ -19,7 +19,22 @@ const DETECT_ORDER: ResourceType[] = [
   "sync_resource",
 ];
 
-/** Map resource type → Komodo Get request name */
+/** Map resource type → List request name (returns list items with state) */
+const LIST_REQUEST: Record<string, string> = {
+  stack: "ListStacks",
+  deployment: "ListDeployments",
+  build: "ListBuilds",
+  server: "ListServers",
+  procedure: "ListProcedures",
+  repo: "ListRepos",
+  action: "ListActions",
+  alerter: "ListAlerters",
+  builder: "ListBuilders",
+  swarm: "ListSwarms",
+  sync_resource: "ListResourceSyncs",
+};
+
+/** Map resource type → Get request name (fallback for types without state in List) */
 const GET_REQUEST: Record<string, string> = {
   stack: "GetStack",
   deployment: "GetDeployment",
@@ -50,8 +65,8 @@ export interface DetectionResult {
 }
 
 /**
- * Auto-detect a resource by trying Get endpoints across types.
- * Returns the first match, or null if nothing found.
+ * Auto-detect a resource by trying List endpoints with filter across types.
+ * Returns the first match with full list-item info (including state), or null.
  */
 export async function detectResource(
   client: KomodoClient,
@@ -61,20 +76,45 @@ export async function detectResource(
   const typesToTry = hint ? [hint, ...DETECT_ORDER.filter((t) => t !== hint)] : DETECT_ORDER;
 
   for (const type of typesToTry) {
-    const requestName = GET_REQUEST[type];
-    if (!requestName) continue;
+    // Try List with filter first — returns list items with state info
+    const listRequest = LIST_REQUEST[type];
+    if (listRequest) {
+      try {
+        const items = (await client.rpc("read", listRequest, {
+          filter: nameOrId,
+        })) as Array<Record<string, unknown>>;
 
-    const paramKey = GET_PARAM_KEY[type] || "id";
-    try {
-      const resource = (await client.rpc("read", requestName, {
-        [paramKey]: nameOrId,
-      })) as Record<string, unknown>;
-
-      if (resource && (resource.name || resource._id)) {
-        return { type, resource };
+        if (Array.isArray(items) && items.length > 0) {
+          // Find exact name match
+          const match = items.find((item) => {
+            if (item.name === nameOrId) return true;
+            const id = item._id as Record<string, unknown> | undefined;
+            return id?.$oid === nameOrId;
+          });
+          if (match) {
+            return { type, resource: match };
+          }
+        }
+      } catch {
+        // List failed — try Get fallback
       }
-    } catch {
-      // Not found on this type — try next
+    }
+
+    // Fallback: try Get endpoint
+    const getRequest = GET_REQUEST[type];
+    if (getRequest) {
+      const paramKey = GET_PARAM_KEY[type] || "id";
+      try {
+        const resource = (await client.rpc("read", getRequest, {
+          [paramKey]: nameOrId,
+        })) as Record<string, unknown>;
+
+        if (resource && (resource.name || resource._id)) {
+          return { type, resource };
+        }
+      } catch {
+        // Not found on this type — try next
+      }
     }
   }
 
